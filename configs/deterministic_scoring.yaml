@@ -1,0 +1,83 @@
+# Fixed, auditable parameters for continuous deterministic scoring.
+# Tune only on a development split, then freeze this file before test-set PCC.
+version: continuous_v3_alignment_gop_2026-07
+missing_quality: 0.50
+
+mode_a:
+  insertion_penalty: 0.65
+  accuracy_weights:
+    word_alignment: 0.35
+    asr_text_similarity: 0.10
+    phone_edit: 0.15
+    phone_gop: 0.20
+    phone_confidence: 0.20
+  phoneme_weights:
+    phone_edit: 0.35
+    phone_gop: 0.45
+    word_alignment: 0.20
+  fluency_weights:
+    speech_rate: 0.55
+    articulation_rate: 0.10
+    pause_ratio: 0.15
+    long_pause_ratio: 0.10
+    mean_length_run: 0.05
+    disfluency: 0.05
+  prosody_weights:
+    pitch_range: 0.34
+    rhythm_variability: 0.20
+    duration_variability: 0.16
+    stress_evidence: 0.15
+    intonation_evidence: 0.15
+  bands:
+    # [soft minimum, ideal minimum, ideal maximum, soft maximum]
+    word_duration_cv: [0.05, 0.18, 0.62, 1.20]
+  peaks:
+    # [quality 0 low, quality 1 peak, quality 0 high]
+    speech_rate_wpm: [45.0, 190.0, 280.0]
+    articulation_rate_wpm: [70.0, 280.0, 420.0]
+  inverse_ramps:
+    # [quality 1 maximum, quality 0 anchor]
+    pause_ratio: [0.03, 0.35]
+    long_pause_ratio: [0.0, 0.20]
+    pause_rate_per_min: [3.0, 20.0]
+    filled_pause_rate_per_100_words: [0.0, 12.0]
+  ramps:
+    # [quality 0 anchor, quality 1 anchor]
+    pitch_range_st: [1.5, 8.0]
+    npvi_word_duration: [18.0, 65.0]
+    mean_length_run_words: [1.0, 20.0]
+
+mode_b:
+  accuracy_weights:
+    word_alignment: 0.34
+    phone_reference_similarity: 0.38
+    phone_canonical_similarity: 0.18
+    ssl_similarity: 0.10
+  phoneme_weights:
+    phone_reference_similarity: 0.55
+    phone_canonical_similarity: 0.30
+    word_alignment: 0.15
+  fluency_weights:
+    speech_tempo_similarity: 0.24
+    pause_similarity: 0.28
+    duration_similarity: 0.28
+    ssl_similarity: 0.20
+  prosody_weights:
+    f0_dtw_similarity: 0.34
+    f0_correlation: 0.18
+    sentence_stress_overlap: 0.20
+    word_stress_similarity: 0.14
+    duration_similarity: 0.14
+  distance_scales:
+    # exp(-distance / scale)
+    pause_mae_s: 0.18
+    duration_mae: 0.55
+    f0_dtw: 1.20
+    ssl_soft_dtw: 0.42
+    tempo_log_ratio: 0.32
+
+overall_weights:
+  accuracy: 0.35
+  phoneme: 0.20
+  fluency: 0.25
+  prosody: 0.20

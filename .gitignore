@@ -1,0 +1,33 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+data/
+runs/
+external/
+*.egg-info/
+
+# Local credentials and machine-specific agent configuration
+.env.*
+!.env.example
+!.env.sample
+.agents/
+.codex/
+.aws/
+
+# Test caches, generated files, and user audio uploads
+.pytest_cache/
+.pytest_tmp/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+tmp/
+uploads/
+
+# Downloaded corpora and model archives (keep annotations and reference texts)
+MultiPA/wav/
+MultiPA/*.zip
+speechocean762/

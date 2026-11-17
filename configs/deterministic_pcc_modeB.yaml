@@ -1,0 +1,17 @@
+# Point report_dir at ModeB reports created with separate reference recordings.
+annotation: MultiPA/annotation.csv
+wav_dir: MultiPA/wav
+report_dir: runs/capt_modeB_deterministic/reports
+reference_map: configs/modeB_reference_map.example.csv
+mode: modeB
+score_config: configs/deterministic_scoring.yaml
+output_dir: runs/deterministic_modeB_pcc_v2
+# If several reference recordings exist for one learner item, median is robust
+# to an unusually fast/slow or acoustically mismatched reference.
+aggregate: median
+bootstrap: 2000
+seed: 20260713
+include_word_proxy: true
+strict_reference: true
+run_analysis: false
+force_analysis: false

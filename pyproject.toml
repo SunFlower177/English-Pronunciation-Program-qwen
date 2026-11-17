@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "textpa-qwen-reproduction"
+version = "0.1.0"
+description = "A reproduction scaffold for TextPA: zero-shot pronunciation assessment using textual descriptions and Qwen LLMs."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Reproduction scaffold generated for research use"}]
+license = {text = "MIT"}
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "tqdm>=4.66",
+    "pydantic>=2.0",
+    "soundfile>=0.12",
+    "librosa>=0.10",
+    "torch>=2.1",
+    "transformers>=4.37",
+    "accelerate>=0.27",
+    "datasets>=2.18",
+    "openai>=1.30",
+    "phonemizer>=3.2",
+    "jiwer>=3.0",
+    "python-dotenv>=1.0",
+    "regex>=2024.5.15",
+    "PyYAML>=6.0"
+]
+
+[project.optional-dependencies]
+whisper = ["openai-whisper>=20231117"]
+charsiu = [
+    "praatio>=6.2",
+    "g2p-en>=2.1"
+]
+capt = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "python-multipart>=0.0.9",
+    "faster-whisper>=1.0",
+    "whisperx>=3.2",
+    "praat-parselmouth>=0.4",
+    "cmudict>=1.0",
+    "pronouncing>=0.2",
+    "g2p-en>=2.1"
+]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+syntax = [
+    "spacy>=3.7",
+    "stanza>=1.8"
+]
+all = [
+    "openai-whisper>=20231117",
+    "praatio>=6.2",
+    "g2p-en>=2.1",
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "python-multipart>=0.0.9",
+    "faster-whisper>=1.0",
+    "whisperx>=3.2",
+    "praat-parselmouth>=0.4",
+    "spacy>=3.7",
+    "stanza>=1.8",
+    "cmudict>=1.0",
+    "pronouncing>=0.2"
+]
+
+[project.scripts]
+textpa-prepare-speechocean = "textpa_qwen.cli:prepare_speechocean_main"
+textpa-prepare-multipa = "textpa_qwen.cli:prepare_multipa_main"
+textpa-extract-cues = "textpa_qwen.cli:extract_cues_main"
+textpa-run-llm = "textpa_qwen.cli:run_llm_main"
+textpa-evaluate = "textpa_qwen.cli:evaluate_main"
+textpa-run-experiment = "textpa_qwen.cli:run_experiment_main"
+capt-analyze = "capt_pronunciation.runtime:cli_main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

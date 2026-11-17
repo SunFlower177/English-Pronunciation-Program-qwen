@@ -1,0 +1,42 @@
+# Default experiment configuration for TextPA-Qwen reproduction.
+# The paper uses Whisper large-v3-en for transcription, facebook/wav2vec2-lv-60-espeak-cv-ft for IPA,
+# Charsiu predictive aligner for CMU phones with pauses, and phonemizer EspeakBackend("en-us") for
+# canonical word-to-IPA mapping. This config follows that design while allowing cheaper Qwen LLMs.
+
+paths:
+  data_dir: data/speechocean762
+  manifest: data/speechocean762/test_manifest.csv
+  output_dir: runs/textpa_qwen_speechocean
+
+models:
+  asr_backend: transformers-whisper # whisper or transformers-whisper
+  whisper_model: large-v3           # paper: large-v3-en; openai-whisper uses large-v3 + language=en
+  whisper_hf_model: openai/whisper-large-v3
+  ipa_model: facebook/wav2vec2-lv-60-espeak-cv-ft
+  charsiu_model: charsiu/en_w2v2_fc_10ms
+  qwen_backend: openai_compatible   # openai_compatible, local_transformers, or mock
+  qwen_model: qwen3.6-plus          # Qwen API choice; use Qwen/Qwen2.5-7B-Instruct for local/vLLM
+  qwen_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  qwen_enable_thinking: false       # keep non-streaming JSON scoring cheaper and easier to parse
+
+audio:
+  sample_rate: 16000
+  language: en
+
+experiment:
+  split: test
+  limit: null                       # set e.g. 20 for smoke test
+  ablation: all                     # transcript, transcript_ipa, transcript_cmu, all
+  basic_prompt: true
+  qwen_strict_json: false             # false keeps the Figure 5 prompt unchanged
+  max_llm_retries: 5
+  sleep_between_llm_calls: 0.0
+  cache_cues: true
+  cache_llm: true
+  allow_cmu_fallback: false         # true only for debugging if Charsiu is unavailable; not paper-faithful
+  seed: 42
+
+scoring:
+  sw_match: 2.0
+  sw_mismatch: -1.0
+  sw_gap: -1.0

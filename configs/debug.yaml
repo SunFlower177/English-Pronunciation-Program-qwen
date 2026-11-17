@@ -1,0 +1,33 @@
+paths:
+  data_dir: data/speechocean762
+  manifest: data/speechocean762/test_manifest.csv
+  output_dir: runs/debug
+models:
+  asr_backend: whisper
+  whisper_model: tiny.en
+  whisper_hf_model: openai/whisper-tiny.en
+  ipa_model: facebook/wav2vec2-lv-60-espeak-cv-ft
+  charsiu_model: charsiu/en_w2v2_fc_10ms
+  qwen_backend: mock
+  qwen_model: mock
+  qwen_base_url: http://localhost:8000/v1
+  qwen_enable_thinking: false
+audio:
+  sample_rate: 16000
+  language: en
+experiment:
+  split: test
+  limit: 5
+  ablation: all
+  basic_prompt: true
+  qwen_strict_json: false
+  max_llm_retries: 2
+  sleep_between_llm_calls: 0.0
+  cache_cues: true
+  cache_llm: true
+  allow_cmu_fallback: true
+  seed: 42
+scoring:
+  sw_match: 2.0
+  sw_mismatch: -1.0
+  sw_gap: -1.0

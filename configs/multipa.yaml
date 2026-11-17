@@ -1,0 +1,33 @@
+paths:
+  data_dir: data/multipa
+  manifest: data/multipa/test_manifest.csv
+  output_dir: runs/textpa_qwen_multipa_qwen36plus
+models:
+  asr_backend: transformers-whisper
+  whisper_model: large-v3
+  whisper_hf_model: openai/whisper-large-v3
+  ipa_model: facebook/wav2vec2-lv-60-espeak-cv-ft
+  charsiu_model: charsiu/en_w2v2_fc_10ms
+  qwen_backend: openai_compatible
+  qwen_model: qwen3.6-plus
+  qwen_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  qwen_enable_thinking: false
+audio:
+  sample_rate: 16000
+  language: en
+experiment:
+  split: test
+  limit: null
+  ablation: all
+  basic_prompt: true
+  qwen_strict_json: false
+  max_llm_retries: 5
+  sleep_between_llm_calls: 0.0
+  cache_cues: true
+  cache_llm: true
+  allow_cmu_fallback: false
+  seed: 42
+scoring:
+  sw_match: 2.0
+  sw_mismatch: -1.0
+  sw_gap: -1.0

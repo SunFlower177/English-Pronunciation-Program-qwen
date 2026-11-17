@@ -1,0 +1,18 @@
+# Re-score existing ModeA reports with continuous evidence; no Qwen call.
+annotation: MultiPA/annotation.csv
+wav_dir: MultiPA/wav
+report_dir: runs/capt_multipa_modeA_reviewed_continuous_pcc/reports
+reference_map: MultiPA/multipa_reference_texts_reviewed.csv
+mode: modeA
+score_config: configs/deterministic_scoring.yaml
+output_dir: runs/deterministic_modeA_pcc_v2
+aggregate: median
+bootstrap: 2000
+seed: 20260713
+include_word_proxy: true
+# This existing MultiPA reference CSV is ASR-assisted, so this is diagnostic,
+# not the final strict scripted-reading experiment.
+strict_reference: false
+# Set true after changing acoustic extraction/model parameters.
+run_analysis: false
+force_analysis: false

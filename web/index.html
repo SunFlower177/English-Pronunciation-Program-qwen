@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evidence-Grounded CAPT</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f6f7f9;
+      color: #172033;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 15px;
+    }
+    textarea, input[type="text"], select {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cfd5df;
+      border-radius: 8px;
+      background: #fff;
+      color: #172033;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    textarea {
+      min-height: 128px;
+      resize: vertical;
+    }
+    button {
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 0;
+      border-radius: 8px;
+      background: #172033;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.secondary {
+      background: #4f5c70;
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    audio {
+      width: 100%;
+      margin-top: 12px;
+    }
+    .card {
+      margin: 14px 0;
+      padding: 18px;
+      background: #fff;
+      border: 1px solid #e2e6ee;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(20, 28, 45, 0.04);
+    }
+    .muted {
+      color: #687386;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .mode-switch {
+      display: inline-flex;
+      flex-wrap: wrap;
+      overflow: hidden;
+      border: 1px solid #cfd5df;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .mode-switch button {
+      border-radius: 0;
+      background: #fff;
+      color: #172033;
+      border-right: 1px solid #cfd5df;
+    }
+    .mode-switch button:last-child {
+      border-right: 0;
+    }
+    .mode-switch button.active {
+      background: #172033;
+      color: #fff;
+    }
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .score, .panel {
+      padding: 11px 12px;
+      background: #f1f4f8;
+      border: 1px solid #e2e6ee;
+      border-radius: 8px;
+    }
+    .score strong, .panel strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #4f5c70;
+      font-size: 13px;
+      text-transform: capitalize;
+    }
+    .annotated {
+      line-height: 2.15;
+      font-size: 17px;
+    }
+    .token {
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .token.issue.low {
+      background: #fff2c2;
+    }
+    .token.issue.medium {
+      background: #ffd9ad;
+    }
+    .token.issue.high {
+      background: #ffc9c9;
+      border-bottom: 2px solid #b42318;
+    }
+    .issue-list li {
+      margin-bottom: 12px;
+      line-height: 1.55;
+    }
+    .tag {
+      display: inline-block;
+      margin: 0 6px 4px 0;
+      padding: 2px 6px;
+      background: #e8eef8;
+      border-radius: 999px;
+      color: #4f5c70;
+      font-size: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #e2e6ee;
+      text-align: left;
+      vertical-align: top;
+    }
+    pre {
+      overflow: auto;
+      max-height: 520px;
+      padding: 12px;
+      background: #111827;
+      color: #e5e7eb;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .chunk {
+      margin: 0 0 10px;
+      padding: 10px;
+      background: #f8fafc;
+      border-left: 4px solid #4f5c70;
+      border-radius: 6px;
+      line-height: 1.55;
+    }
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Evidence-Grounded CAPT</h1>
+    <p class="muted">听、说、读、写一体化训练：先提取结构化证据，再生成反馈和跨模块练习。</p>
+  </header>
+
+  <section class="card">
+    <h2>0. 分析模式</h2>
+    <div class="mode-switch" role="tablist" aria-label="分析模式">
+      <button id="modeReading" class="active" type="button">文本与录音</button>
+      <button id="modeImitation" type="button">录音与录音</button>
+      <button id="modeLongSentence" type="button">长难句分析</button>
+      <button id="modeListening" type="button">听力训练</button>
+      <button id="modeWriting" type="button">写作训练</button>
+    </div>
+  </section>
+
+  <section id="textSection" class="card">
+    <h2 id="textTitle">1. 参考文本</h2>
+    <textarea id="reference">I want to improve my English pronunciation. Pick it up and read the article clearly.</textarea>
+    <p id="referenceHint" class="muted"></p>
+  </section>
+
+  <section id="referenceAudioSection" class="card" hidden>
+    <h2>2. 参考录音</h2>
+    <input id="referenceFile" type="file" accept="audio/*" />
+    <p id="referenceStatus" class="muted"></p>
+    <audio id="referencePreview" controls></audio>
+  </section>
+
+  <section id="learnerAudioSection" class="card">
+    <h2><span id="learnerStep">2</span>. 学生录音</h2>
+    <div class="row">
+      <input id="learnerFile" type="file" accept="audio/*" />
+      <button id="start" type="button">开始录音</button>
+      <button id="stop" class="secondary" type="button" disabled>停止录音</button>
+      <span id="recordStatus" class="muted"></span>
+    </div>
+    <audio id="learnerPreview" controls></audio>
+  </section>
+
+  <section id="listeningSection" class="card" hidden>
+    <h2>1. 听力材料与学生输出</h2>
+    <label>听力音频，可选。如果不填参考原文，系统会用 ASR 生成原文。</label>
+    <input id="listeningFile" type="file" accept="audio/*" />
+    <audio id="listeningPreview" controls></audio>
+    <h3>参考原文 / Transcript</h3>
+    <textarea id="listeningReference">The theory had been widely accepted for decades, but new evidence challenged it.</textarea>
+    <h3>学生听写</h3>
+    <textarea id="studentTranscript">The theory widely accepted for decades but new evident challenged it.</textarea>
+    <h3>学生笔记</h3>
+    <textarea id="studentNotes">theory accepted long time; new evidence challenged</textarea>
+  </section>
+
+  <section id="writingSection" class="card" hidden>
+    <h2>1. 写作题目与作文</h2>
+    <label>考试类型</label>
+    <select id="examType">
+      <option value="IELTS_Task_2">IELTS Task 2</option>
+      <option value="TOEFL_Academic_Discussion">TOEFL Academic Discussion</option>
+      <option value="TOEFL_Integrated_Writing">TOEFL Integrated Writing</option>
+      <option value="General_Academic">General Academic Writing</option>
+    </select>
+    <h3>题目</h3>
+    <textarea id="writingPrompt">Some people believe online learning is better than traditional classroom learning. To what extent do you agree or disagree?</textarea>
+    <h3>作文</h3>
+    <textarea id="essay">Many student believe online learning are convenient. I think online learning is very good because people can save time. Online learning has a big influence on education, but it also has some problems.</textarea>
+    <h3>上一版作文，可选</h3>
+    <textarea id="previousEssay" placeholder="如果想比较修改效果，可以粘贴上一版作文。"></textarea>
+  </section>
+
+  <section class="card">
+    <h2><span id="analyzeStep">3</span>. 分析</h2>
+    <div class="row">
+      <button id="analyze" type="button">开始分析</button>
+      <span id="status" class="muted"></span>
+    </div>
+  </section>
+
+  <section id="result" class="card" hidden>
+    <h2>分析结果</h2>
+
+    <div id="pronunciationResult" hidden>
+      <h3>ASR 转写</h3>
+      <p id="asr"></p>
+      <h3>总分</h3>
+      <div id="scores" class="scores"></div>
+      <h3>标注文本</h3>
+      <div id="annotated" class="annotated"></div>
+      <h3>反馈摘要</h3>
+      <p id="summary"></p>
+      <h3>具体问题</h3>
+      <ol id="items" class="issue-list"></ol>
+    </div>
+
+    <div id="longSentenceResult" hidden>
+      <h3>主干分析</h3>
+      <div id="modeCMainClause" class="grid"></div>
+      <h3>修饰成分</h3>
+      <ol id="modeCModifiers" class="issue-list"></ol>
+      <h3>从句结构</h3>
+      <ol id="modeCClauses" class="issue-list"></ol>
+      <h3>语法点</h3>
+      <ol id="modeCGrammar" class="issue-list"></ol>
+      <h3>分块翻译</h3>
+      <div id="modeCChunks"></div>
+      <h3>整句翻译</h3>
+      <p id="modeCFullTranslation"></p>
+      <h3>阅读策略</h3>
+      <p id="modeCStrategy"></p>
+      <h3>综合评价</h3>
+      <p id="modeCSummary"></p>
+    </div>
+
+    <div id="listeningResult" hidden>
+      <h3>听力分数</h3>
+      <div id="listeningScores" class="scores"></div>
+      <h3>总体反馈</h3>
+      <p id="listeningSummary"></p>
+      <h3>听写对齐</h3>
+      <div id="dictationTable"></div>
+      <h3>笔记覆盖</h3>
+      <ol id="noteCoverage" class="issue-list"></ol>
+      <h3>错因训练</h3>
+      <ol id="listeningTraining" class="issue-list"></ol>
+    </div>
+
+    <div id="writingResult" hidden>
+      <h3>写作分数</h3>
+      <div id="writingScores" class="scores"></div>
+      <h3>总体反馈</h3>
+      <p id="writingSummary"></p>
+      <h3>Rubric 分项</h3>
+      <ol id="rubricFeedback" class="issue-list"></ol>
+      <h3>结构与逻辑</h3>
+      <ol id="globalFeedback" class="issue-list"></ol>
+      <h3>语法与句法</h3>
+      <ol id="localFeedback" class="issue-list"></ol>
+      <h3>词汇与搭配</h3>
+      <ol id="lexicalFeedback" class="issue-list"></ol>
+      <h3>修改任务</h3>
+      <ol id="revisionTasks" class="issue-list"></ol>
+    </div>
+
+    <div id="learningResult">
+      <h3>跨模块推荐</h3>
+      <ol id="recommendations" class="issue-list"></ol>
+      <h3>推荐练习</h3>
+      <ol id="practiceItems" class="issue-list"></ol>
+    </div>
+
+    <details>
+      <summary>查看完整 JSON</summary>
+      <pre id="json"></pre>
+    </details>
+  </section>
+</main>
+
+<script>
+let mode = 'reading';
+let recorder = null;
+let chunks = [];
+let recordedBlob = null;
+
+const modes = {
+  reading: document.getElementById('modeReading'),
+  imitation: document.getElementById('modeImitation'),
+  long_sentence: document.getElementById('modeLongSentence'),
+  listening: document.getElementById('modeListening'),
+  writing: document.getElementById('modeWriting')
+};
+const referenceInput = document.getElementById('reference');
+const textTitle = document.getElementById('textTitle');
+const referenceHint = document.getElementById('referenceHint');
+const textSection = document.getElementById('textSection');
+const referenceAudioSection = document.getElementById('referenceAudioSection');
+const learnerAudioSection = document.getElementById('learnerAudioSection');
+const listeningSection = document.getElementById('listeningSection');
+const writingSection = document.getElementById('writingSection');
+const referenceFile = document.getElementById('referenceFile');
+const referencePreview = document.getElementById('referencePreview');
+const referenceStatus = document.getElementById('referenceStatus');
+const learnerFile = document.getElementById('learnerFile');
+const learnerPreview = document.getElementById('learnerPreview');
+const listeningFile = document.getElementById('listeningFile');
+const listeningPreview = document.getElementById('listeningPreview');
+const startBtn = document.getElementById('start');
+const stopBtn = document.getElementById('stop');
+const analyzeBtn = document.getElementById('analyze');
+const statusEl = document.getElementById('status');
+const recStatus = document.getElementById('recordStatus');
+const learnerStep = document.getElementById('learnerStep');
+const analyzeStep = document.getElementById('analyzeStep');
+
+Object.entries(modes).forEach(([key, button]) => {
+  button.onclick = () => setMode(key);
+});
+setMode('reading');
+
+function setMode(nextMode) {
+  mode = nextMode;
+  Object.entries(modes).forEach(([key, button]) => button.classList.toggle('active', key === mode));
+  textSection.hidden = mode === 'listening' || mode === 'writing';
+  referenceAudioSection.hidden = mode !== 'imitation';
+  learnerAudioSection.hidden = mode === 'long_sentence' || mode === 'listening' || mode === 'writing';
+  listeningSection.hidden = mode !== 'listening';
+  writingSection.hidden = mode !== 'writing';
+  textTitle.textContent = mode === 'long_sentence' ? '1. 英文长难句' : '1. 参考文本';
+  referenceHint.textContent = hintForMode(mode);
+  learnerStep.textContent = mode === 'imitation' ? '3' : '2';
+  analyzeStep.textContent = mode === 'imitation' ? '4' : mode === 'long_sentence' ? '2' : mode === 'listening' || mode === 'writing' ? '2' : '3';
+  statusEl.textContent = '';
+}
+
+function hintForMode(current) {
+  if (current === 'long_sentence') return '输入一条托福/学术英语长难句，系统输出主干、从句、修饰、语法点、分块翻译和阅读策略。';
+  if (current === 'imitation') return '参考文本可选。录音与录音模式会把参考录音和学生录音对齐到同一文本，再比较停顿、连读、重音、语调和节奏。';
+  return '文本与录音模式必须输入参考文本，系统会输出 ASR、对齐证据、音素、停顿、连读、重音、语调和反馈。';
+}
+
+referenceFile.onchange = () => {
+  if (referenceFile.files.length) {
+    referencePreview.src = URL.createObjectURL(referenceFile.files[0]);
+    referenceStatus.textContent = `已选择：${referenceFile.files[0].name}`;
+  }
+};
+
+listeningFile.onchange = () => {
+  if (listeningFile.files.length) listeningPreview.src = URL.createObjectURL(listeningFile.files[0]);
+};
+
+learnerFile.onchange = () => {
+  if (learnerFile.files.length) {
+    recordedBlob = null;
+    learnerPreview.src = URL.createObjectURL(learnerFile.files[0]);
+    recStatus.textContent = `已选择：${learnerFile.files[0].name}`;
+  }
+};
+
+startBtn.onclick = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = event => chunks.push(event.data);
+    recorder.onstop = () => {
+      recordedBlob = new Blob(chunks, { type: 'audio/webm' });
+      learnerPreview.src = URL.createObjectURL(recordedBlob);
+      recStatus.textContent = `已录音 ${(recordedBlob.size / 1024).toFixed(1)} KB`;
+      stream.getTracks().forEach(track => track.stop());
+    };
+    recorder.start();
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    recStatus.textContent = '录音中...';
+  } catch (error) {
+    recStatus.textContent = `无法开始录音：${error.message}`;
+  }
+};
+
+stopBtn.onclick = () => {
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+};
+
+analyzeBtn.onclick = async () => {
+  const form = new FormData();
+  let endpoint = '/api/analyze-reading';
+  try {
+    if (mode === 'long_sentence') {
+      const sentence = referenceInput.value.trim();
+      if (!sentence) return alert('请输入英文长难句。');
+      form.append('sentence', sentence);
+      form.append('level', 'TOEFL');
+      form.append('detail', 'full');
+      endpoint = '/api/analyze-long-sentence';
+    } else if (mode === 'listening') {
+      if (listeningFile.files.length) form.append('audio', listeningFile.files[0]);
+      form.append('reference_transcript', document.getElementById('listeningReference').value.trim());
+      form.append('student_transcript', document.getElementById('studentTranscript').value.trim());
+      form.append('student_notes', document.getElementById('studentNotes').value.trim());
+      endpoint = '/api/analyze-listening';
+    } else if (mode === 'writing') {
+      form.append('prompt', document.getElementById('writingPrompt').value.trim());
+      form.append('essay', document.getElementById('essay').value.trim());
+      form.append('exam_type', document.getElementById('examType').value);
+      form.append('previous_essay', document.getElementById('previousEssay').value.trim());
+      endpoint = '/api/analyze-writing';
+    } else {
+      const reference = referenceInput.value.trim();
+      if (mode === 'reading' && !reference) return alert('请输入参考文本。');
+      if (mode === 'imitation' && !referenceFile.files.length) return alert('请上传参考录音。');
+      const learnerAudio = getLearnerAudio();
+      if (!learnerAudio) return alert('请上传或录制学生录音。');
+      form.append('reference_text', reference);
+      if (mode === 'reading') {
+        form.append('audio', learnerAudio.blob, learnerAudio.name);
+      } else {
+        form.append('reference_audio', referenceFile.files[0]);
+        form.append('learner_audio', learnerAudio.blob, learnerAudio.name);
+        endpoint = '/api/analyze-imitation';
+      }
+    }
+    analyzeBtn.disabled = true;
+    statusEl.textContent = '分析中，加载模型时可能需要一段时间...';
+    const response = await fetch(endpoint, { method: 'POST', body: form });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    render(data);
+    statusEl.textContent = `完成，analysis_id=${data.analysis_id}`;
+  } catch (error) {
+    statusEl.textContent = `失败：${error.message}`;
+  } finally {
+    analyzeBtn.disabled = false;
+  }
+};
+
+function getLearnerAudio() {
+  if (learnerFile.files.length) return { blob: learnerFile.files[0], name: learnerFile.files[0].name };
+  if (recordedBlob) return { blob: recordedBlob, name: 'recording.webm' };
+  return null;
+}
+
+function render(data) {
+  document.getElementById('result').hidden = false;
+  hideAllResults();
+  if (data.mode === 'long_sentence') renderLongSentence(data);
+  else if (data.mode === 'listening') renderListening(data);
+  else if (data.mode === 'writing') renderWriting(data);
+  else renderPronunciation(data);
+  renderLearning(data.learning);
+  document.getElementById('json').textContent = JSON.stringify(data, null, 2);
+}
+
+function hideAllResults() {
+  ['pronunciationResult', 'longSentenceResult', 'listeningResult', 'writingResult'].forEach(id => document.getElementById(id).hidden = true);
+}
+
+function renderPronunciation(data) {
+  document.getElementById('pronunciationResult').hidden = false;
+  document.getElementById('asr').textContent = (data.asr && data.asr.text) || '(empty)';
+  renderScores('scores', data.feedback ? data.feedback.overall_scores : {});
+  document.getElementById('annotated').innerHTML = data.feedback ? (data.feedback.annotated_text_html || '') : '';
+  document.getElementById('summary').textContent = data.feedback ? (data.feedback.summary_zh || data.feedback.summary_en || '') : '';
+  fillList('items', (data.feedback && data.feedback.items || []).map(item => {
+    const practice = (item.practice || []).join(' / ');
+    return `<strong>${escapeHtml(item.issue_id)}</strong> ${escapeHtml(item.display_text)}<br>${escapeHtml(item.explanation_zh || item.explanation_en || '')}${practice ? `<br><span class="muted">练习：${escapeHtml(practice)}</span>` : ''}`;
+  }), true);
+}
+
+function renderLongSentence(data) {
+  document.getElementById('longSentenceResult').hidden = false;
+  const evidence = data.evidence || {};
+  const explanation = data.explanation || {};
+  const main = evidence.main_clause || {};
+  const mainBox = document.getElementById('modeCMainClause');
+  mainBox.innerHTML = '';
+  [
+    ['主语', main.subject || '未确定'],
+    ['谓语', main.predicate || '未确定'],
+    ['宾语/补足语', main.object_or_complement || '未确定'],
+    ['主干意思', main.full_span || evidence.normalized_sentence || '']
+  ].forEach(([label, value]) => mainBox.appendChild(panel(label, value)));
+  fillList('modeCModifiers', explanation.modifier_explanations || (evidence.modifiers || []).map(item => `${item.span}: ${item.function_zh}`));
+  fillList('modeCClauses', explanation.clause_explanations || (evidence.clauses || []).map(item => `${item.span}: ${item.function_zh}`));
+  fillList('modeCGrammar', explanation.grammar_explanations || (evidence.grammar_points || []).map(item => `${item.span}: ${item.explanation_zh}`));
+  const chunks = document.getElementById('modeCChunks');
+  chunks.innerHTML = '';
+  (explanation.chunk_translation || evidence.chunks || []).forEach(chunk => {
+    const div = document.createElement('div');
+    div.className = 'chunk';
+    div.innerHTML = `<span class="tag">${escapeHtml(chunk.role || '')}</span><strong>${escapeHtml(chunk.source || '')}</strong><br>${escapeHtml(chunk.translation_zh || '')}`;
+    chunks.appendChild(div);
+  });
+  document.getElementById('modeCFullTranslation').textContent = explanation.full_translation || '';
+  document.getElementById('modeCStrategy').textContent = explanation.reading_strategy || '';
+  document.getElementById('modeCSummary').textContent = explanation.summary_zh || '';
+}
+
+function renderListening(data) {
+  document.getElementById('listeningResult').hidden = false;
+  const evidence = data.evidence || {};
+  const feedback = data.feedback || {};
+  const listeningScores = pickScores(evidence.scores || {}, ['dictation_accuracy', 'note_coverage', 'overall']);
+  renderScores('listeningScores', listeningScores);
+  document.getElementById('listeningSummary').textContent = cleanListeningSummary(feedback.summary_zh || '');
+  renderDictationTable(evidence.alignment || []);
+  fillList('noteCoverage', (evidence.note_coverage || []).map(p => `${p.covered ? '已覆盖' : '缺失'}：${p.reference_point}（覆盖度 ${p.coverage_score}）`));
+  fillList('listeningTraining', feedback.training_plan || []);
+}
+
+function renderWriting(data) {
+  document.getElementById('writingResult').hidden = false;
+  const evidence = data.evidence || {};
+  const feedback = data.feedback || {};
+  renderScores('writingScores', evidence.rubric_scores || {});
+  document.getElementById('writingSummary').textContent = feedback.summary_zh || '';
+  fillList('rubricFeedback', feedback.rubric_feedback || []);
+  fillList('globalFeedback', feedback.global_feedback || []);
+  fillList('localFeedback', feedback.local_feedback || []);
+  fillList('lexicalFeedback', feedback.lexical_feedback || []);
+  fillList('revisionTasks', feedback.revision_tasks || []);
+}
+
+function renderLearning(learning) {
+  const recs = ((learning && learning.recommendations) || []).filter(x => !hasComprehensionTag(x));
+  const practices = ((learning && learning.practice_items) || []).filter(x => !hasComprehensionTag(x));
+  fillList('recommendations', recs.map(r => `<strong>${escapeHtml(r.target_mode)}｜${escapeHtml(r.title)}</strong><br>${escapeHtml(r.rationale)}<br><span class="muted">${escapeHtml((r.skill_tags || []).join(', '))}</span>`), true);
+  fillList('practiceItems', practices.map(p => `<strong>${escapeHtml(p.target_mode)}｜${escapeHtml(p.title)}</strong><br>${escapeHtml(p.instruction)}`), true);
+}
+
+function pickScores(scores, keys) {
+  const out = {};
+  keys.forEach(key => {
+    if (Object.prototype.hasOwnProperty.call(scores, key)) out[key] = scores[key];
+  });
+  return out;
+}
+
+function hasComprehensionTag(item) {
+  const tags = (item && item.skill_tags) || [];
+  const text = `${item && item.title || ''} ${item && item.rationale || ''} ${item && item.instruction || ''} ${tags.join(' ')}`;
+  return text.includes('listening.comprehension') || text.includes('comprehension_error');
+}
+
+function cleanListeningSummary(text) {
+  return String(text || '')
+    .replace(/理解题得分\s*[0-9.]+。?/g, '')
+    .replace(/comprehension_error\s*\d+\s*个[、，,\s]*/g, '')
+    .replace(/主要问题：\s*。/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function renderScores(id, scores) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  Object.entries(scores || {}).forEach(([key, value]) => {
+    const div = document.createElement('div');
+    div.className = 'score';
+    div.innerHTML = `<strong>${escapeHtml(key)}</strong>${escapeHtml(value)}`;
+    box.appendChild(div);
+  });
+}
+
+function renderDictationTable(items) {
+  const box = document.getElementById('dictationTable');
+  const rows = items.filter(x => x.operation !== 'equal').slice(0, 40);
+  if (!rows.length) {
+    box.textContent = '听写没有发现明显逐词错误。';
+    return;
+  }
+  let html = '<table><thead><tr><th>类型</th><th>参考</th><th>学生</th><th>解释</th></tr></thead><tbody>';
+  rows.forEach(x => {
+    html += `<tr><td>${escapeHtml(x.error_type)}</td><td>${escapeHtml(x.ref_word || '[无]')}</td><td>${escapeHtml(x.student_word || '[漏写]')}</td><td>${escapeHtml(x.explanation_hint || '')}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  box.innerHTML = html;
+}
+
+function fillList(id, values, html = false) {
+  const list = document.getElementById(id);
+  list.innerHTML = '';
+  (values || []).forEach(value => {
+    const li = document.createElement('li');
+    if (html) li.innerHTML = value;
+    else li.textContent = value;
+    list.appendChild(li);
+  });
+}
+
+function panel(label, value) {
+  const div = document.createElement('div');
+  div.className = 'panel';
+  div.innerHTML = `<strong>${escapeHtml(label)}</strong>${escapeHtml(value)}`;
+  return div;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[char]));
+}
+</script>
+</body>
+</html>

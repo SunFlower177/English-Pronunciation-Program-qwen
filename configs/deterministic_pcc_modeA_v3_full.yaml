@@ -1,0 +1,36 @@
+# Full MultiPA re-analysis with the corrected deterministic ModeA pipeline.
+annotation: MultiPA/annotation.csv
+wav_dir: MultiPA/wav
+report_dir: runs/capt_multipa_modeA_v3_forced_alignment/reports
+reference_map: MultiPA/multipa_reference_texts_reviewed.csv
+mode: modeA
+score_config: configs/deterministic_scoring.yaml
+output_dir: runs/deterministic_modeA_v3_pcc
+aggregate: median
+bootstrap: 2000
+seed: 20260716
+include_word_proxy: true
+strict_reference: false
+run_analysis: true
+force_analysis: true
+
+evaluation_split:
+  enabled: true
+  # The first UUID is the only available repeated group/speaker proxy.
+  group_separator: "---"
+  dev_fraction: 0.70
+  seed: 20260716
+
+runtime:
+  asr_backend: faster_whisper
+  whisperx_model: large-v3
+  device: cuda
+  compute_type: float16
+  use_whisperx_alignment: false
+  use_mfa: false
+  use_ctc_alignment: true
+  phoneme_model: facebook/wav2vec2-xlsr-53-espeak-cv-ft
+  use_phoneme_model: true
+  phoneme_require_equal_word: false
+  phoneme_skip_function_words: false
+  phoneme_min_word_duration_s: 0.20
